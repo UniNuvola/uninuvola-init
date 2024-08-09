@@ -1,4 +1,5 @@
 from uninuvola_init.configs import configs
+from uninuvola_init.logger import logger
 from . import api
 
 
@@ -7,6 +8,8 @@ def deploy():
 
     Runs every CLI commands needed for auto-deploy a new Vault container.
     """
+
+    logger.info("Deploying VAULT")
 
     api.init()
     api.unseal()
