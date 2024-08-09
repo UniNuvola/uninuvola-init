@@ -1,9 +1,10 @@
 import sys
 from yaml import safe_load, YAMLError
 from uninuvola_init.logger import logger
+from uninuvola_init.args import args
 
 
-def config_parser(path) -> dict:
+def _config_parser(path) -> dict:
     try:
         with open(path, 'r') as stream:
             try:
@@ -20,3 +21,6 @@ def config_parser(path) -> dict:
     except FileNotFoundError as e:
         logger.error("%s: %s", e, path)
         sys.exit(1)
+
+
+configs = _config_parser(args.config)
