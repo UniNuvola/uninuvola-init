@@ -25,3 +25,5 @@ def deploy():
         )
 
         api.get_config(appname='web', filename=oidc_conf['secretfile'])
+
+    api.logout()

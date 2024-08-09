@@ -309,3 +309,11 @@ def read(secret):
 
     except OSError as e:
         logger.error("No config file found !\n%s", e)
+
+
+def logout():
+    logger.info("Loggin out")
+
+    # revoke_token=True revoke the root_token created !
+    _client.logout(revoke_token=False)
+    _client.keys = None
