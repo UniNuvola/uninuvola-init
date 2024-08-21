@@ -124,6 +124,30 @@ def unseal():
 #         logger.info(f"Alias ID for {user['name']} is: {alias_id}")
 
 
+def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", description="auth method"):
+    """Enable openldap/ auth method.
+    """
+
+    _ = _auth()
+
+    logger.info("Enabling ldap/")
+
+    _client.sys.enable_auth_method(
+        method_type='ldap',
+        description=description,
+        path=ldap_auth_path,
+    )
+
+    _client.auth.ldap.configure(
+        user_dn=f'dc=users,{dc}',   # WARNING: should be ou=users ??
+        group_dn=f'ou=groups,{dc}',
+        url=f'{ip}:{port}',
+        bind_dn=f'cn={user},{dc}',
+        bind_pass=password,
+        user_attr='uid',
+        group_attr='cn',
+    )
+
 # def enable_userpass():
 #     """Enable userpass/ auth method.
 #     """

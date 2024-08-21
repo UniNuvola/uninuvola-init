@@ -13,6 +13,13 @@ def deploy():
 
     api.init()
     api.unseal()
+    api.enable_openldap(
+        ip=configs['openldap']['ip'],
+        port=configs['openldap']['port'],
+        dc=configs['openldap']['dc'],
+        user=configs['openldap']['user'],
+        password=configs['openldap']['password'],
+   )
     # api.enable_userpass()
     # api.create_entity()
     # api.set_users()
