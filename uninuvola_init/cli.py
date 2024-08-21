@@ -3,5 +3,5 @@ from uninuvola_init import openLDAP
 
 
 def main():
-    vault.deploy()
     openLDAP.deploy()
+    vault.deploy()
