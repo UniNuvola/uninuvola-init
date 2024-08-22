@@ -139,7 +139,7 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
     )
 
     _client.auth.ldap.configure(
-        user_dn=f'dc=users,{dc}',   # WARNING: should be ou=users ??
+        user_dn=f'ou=users,{dc}',
         group_dn=f'ou=groups,{dc}',
         url=f'{ip}:{port}',
         bind_dn=f'cn={user},{dc}',
