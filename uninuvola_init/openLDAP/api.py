@@ -133,6 +133,7 @@ class LdapManager():
 
         return response
 
+    # WARNING: users are not needed in production !!
     def __add_user(self, user_id:str, first_name, last_name, password:str, ou, uid:int, gid:int):
         common_name = f'{first_name} {last_name}'
 
@@ -141,7 +142,7 @@ class LdapManager():
             'sn': last_name,
             'cn': common_name,
             'uid': user_id,
-            'userPassword': hashlib.md5(password.encode()).hexdigest(), # TODO: should be encoded ??
+            'userPassword': f'{{MD5}}{hashlib.md5(password.encode()).hexdigest()}', # WARNING: wrong password encoding
             'uidNumber': f'{uid}',
             'gidNumber': f'{gid}',
             'homeDirectory': f'/home/user/{user_id}',
