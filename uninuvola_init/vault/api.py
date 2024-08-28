@@ -341,3 +341,19 @@ def logout():
     # revoke_token=True revoke the root_token created !
     _client.logout(revoke_token=False)
     _client.keys = None
+
+
+def custom_ui():
+    _ = _auth()
+    
+    tune_conf = {
+        'listing_visibility': 'unauth',
+    }
+
+    logger.info("Changing Vault UI: ldap default login method")
+    logger.debug(tune_conf)
+
+    _client.write_data(
+        path="sys/auth/ldap/tune",
+        data=tune_conf,
+    )

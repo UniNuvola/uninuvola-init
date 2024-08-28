@@ -19,11 +19,12 @@ def deploy():
         dc=configs['openldap']['dc'],
         user=configs['openldap']['readuser'],
         password=configs['openldap']['readpassword'],
-   )
+    )
     # api.enable_userpass()
     # api.create_entity()
     # api.set_users()
     api.create_group()
+    api.custom_ui()
 
     # creating oidc application and retriving configs
     for _, oidc_conf in configs['vault']['oidcs'].items():
@@ -35,5 +36,5 @@ def deploy():
         )
 
         api.get_config(appname='web', filename=oidc_conf['secretfile'])
-
+    
     api.logout()
