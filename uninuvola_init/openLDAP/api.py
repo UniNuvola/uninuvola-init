@@ -142,7 +142,7 @@ class LdapManager():
             'sn': last_name,
             'cn': common_name,
             'uid': user_id,
-            'userPassword': f'{{MD5}}{hashlib.md5(password.encode()).hexdigest()}', # WARNING: wrong password encoding
+            'userPassword': password, # WARNING: clear password !!
             'uidNumber': f'{uid}',
             'gidNumber': f'{gid}',
             'homeDirectory': f'/home/user/{user_id}',
