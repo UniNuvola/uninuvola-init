@@ -1,0 +1,6 @@
+vault:
+  ip: localhost
+  port: 8080
+openldap:
+  ip: localhost
+  port: 1639
