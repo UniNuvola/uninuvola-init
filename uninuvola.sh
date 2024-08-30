@@ -35,6 +35,10 @@ REDIS_PASSWORD=`openssl rand -base64 12`
 # ldapsync
 LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
 
+# Add passwords
+sed  -i "/readonlyuser:/a$(printf '\%1s') readonlypassword: \"$READONLY_PASSWORD\"" $CONFIGFILE
+sed  -i "/readonlyuser:/a$(printf '\%1s') password: \"$ADMIN_PASSWORD\"" $CONFIGFILE
+
 
 if [ "a$1" == "a--reinstall" ]; then
 	cd $WORKINGDIR/uninuvola/vault
