@@ -9,6 +9,7 @@ def _config_parser(path) -> dict:
         with open(path, 'r') as stream:
             try:
                 content = safe_load(stream)
+                content['openldap']['dc'] = ",".join([f'dc={x}' for x in content['general']['domain'].split('.')])
 
                 logger.debug("Config file '%s': %s", path, content)
 
