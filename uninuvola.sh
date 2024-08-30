@@ -48,9 +48,9 @@ docker compose up -d
 
 cd $HOME/uninuvola
 
-LDAP_IP=`cat uninuvola.yaml | yq .ldap.ip -r`
+LDAP_IP=`cat uninuvola.yaml | yq .openldap.ip -r`
 LDAPADMIN_IP=`cat uninuvola.yaml | yq .ldapadmin.ip -r`
-READONLY_USER=`cat uninuvola.yaml | yq .ldap.readonlyuser`
+READONLY_USER=`cat uninuvola.yaml | yq .openldap.readonlyuser`
 READONLY_PASSWORD=`openssl rand -base64 12`
 ADMIN_PASSWORD=`openssl rand -base64 12`
 CONFIG_PASSWORD=`openssl rand -base64 12`
