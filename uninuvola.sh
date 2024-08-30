@@ -1,24 +1,55 @@
 #!/bin/bash
 
+WORKINGDIR=$HOME
+CONFIGFILE=config.yaml
+
+if [ ! -f $CONFIGFILE ]; then
+	echo "File $CONFIGFILE not found"
+  	exit 1
+fi
+
+# Loading Configs
+
+# general
+PROJECT=`cat $CONFIGFILE | yq .general.project`
+DOMAIN=`cat $CONFIGFILE | yq .general.domain`
+
+# vault
+VAULT_IP=`cat $CONFIGFILE | yq .vault.ip -r`
+VAULT_PORT=`cat $CONFIGFILE | yq .vault.port`
+
+# ldap
+LDAP_IP=`cat $CONFIGFILE | yq .openldap.ip -r`
+LDAPADMIN_IP=`cat $CONFIGFILE | yq .ldapadmin.ip -r`
+READONLY_USER=`cat $CONFIGFILE | yq .openldap.readonlyuser`
+READONLY_PASSWORD=`openssl rand -base64 12`
+ADMIN_PASSWORD=`openssl rand -base64 12`
+CONFIG_PASSWORD=`openssl rand -base64 12`
+
+# redis
+REDIS_IP=`cat $CONFIGFILE | yq .redis.ip -r`
+REDIS_PORT=`cat $CONFIGFILE | yq .redis.port`
+REDIS_USERNAME=`cat $CONFIGFILE | yq .redis.username`
+REDIS_PASSWORD=`openssl rand -base64 12`
+
+# ldapsync
+LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
+
+
 if [ "a$1" == "a--reinstall" ]; then
-	cd $HOME/uninuvola/vault
+	cd $WORKINGDIR/uninuvola/vault
 	docker compose down
-	cd $HOME/uninuvola/openLDAP
+	cd $WORKINGDIR/uninuvola/openLDAP
 	docker compose down
-	cd $HOME/uninuvola/redis
+	cd $WORKINGDIR/uninuvola/redis
 	docker compose down
-	cd $HOME/uninuvola/ldapsyncservice/compose
+	cd $WORKINGDIR/uninuvola/ldapsyncservice/compose
 	docker compose down
-	cd $HOME
+	cd $WORKINGDIR
 	rm -rf uninuvola
 fi
 
-cd $HOME
-
-if [ ! -f uninuvola.yaml ]; then
-	echo "File uninuvola.yaml not found"
-  	exit 1
-fi
+cd $WORKINGDIR
 
 if [ -d uninuvola ]; then
 	echo "Directory uninuvola already exists"
@@ -26,17 +57,10 @@ if [ -d uninuvola ]; then
 fi
 
 mkdir uninuvola
-cp uninuvola.yaml uninuvola
-
+# cp $CONFIGFILE uninuvola
 cd uninuvola
 
-PROJECT=`cat uninuvola.yaml | yq .general.project`
-DOMAIN=`cat uninuvola.yaml | yq .general.domain`
-
 # Vault
-
-VAULT_IP=`cat uninuvola.yaml | yq .vault.ip -r`
-VAULT_PORT=`cat uninuvola.yaml | yq .vault.port`
 
 git clone git@github.com:UniNuvola/vault
 cd vault
@@ -46,15 +70,7 @@ docker compose up -d
 
 # OpenLDAP
 
-cd $HOME/uninuvola
-
-LDAP_IP=`cat uninuvola.yaml | yq .openldap.ip -r`
-LDAPADMIN_IP=`cat uninuvola.yaml | yq .ldapadmin.ip -r`
-READONLY_USER=`cat uninuvola.yaml | yq .openldap.readonlyuser`
-READONLY_PASSWORD=`openssl rand -base64 12`
-ADMIN_PASSWORD=`openssl rand -base64 12`
-CONFIG_PASSWORD=`openssl rand -base64 12`
-
+cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/openLDAP
 cd openLDAP
 echo "LDAP_IP=$LDAP_IP" > .env
@@ -69,13 +85,7 @@ docker compose up -d
 
 # Redis
 
-cd $HOME/uninuvola
-
-REDIS_IP=`cat uninuvola.yaml | yq .redis.ip -r`
-REDIS_PORT=`cat uninuvola.yaml | yq .redis.port`
-REDIS_USERNAME=`cat uninuvola.yaml | yq .redis.username`
-REDIS_PASSWORD=`openssl rand -base64 12`
-
+cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/redis
 cd redis
 echo "REDIS_IP=$REDIS_IP" > .env
@@ -84,14 +94,11 @@ docker compose up -d
 
 # Ldapsync
 
-cd $HOME/uninuvola
-
-LDAPSYNC_IP=`cat uninuvola.yaml | yq .ldapsync.ip`
-
+cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/ldapsyncservice
 cd ldapsyncservice/compose
-echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" > .env
+echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
+echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
-
 docker compose up -d
