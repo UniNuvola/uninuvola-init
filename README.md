@@ -32,7 +32,6 @@ vault:
 openldap:
   ip:
   port:
-  dc:
   ougroups:
   ouusers:
   user:
