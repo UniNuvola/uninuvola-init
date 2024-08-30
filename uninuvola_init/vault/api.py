@@ -8,7 +8,7 @@ from uninuvola_init.configs import configs
 
 
 SECRETS_FILE = ".secrets"
-CLIENT_IP = f"{configs['vault']['ip']}:{configs['vault']['port']}"
+CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}"
 
 logger.debug("Vault IP: %s", CLIENT_IP)
 _client = hvac.Client(url=CLIENT_IP)
@@ -141,7 +141,7 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
     _client.auth.ldap.configure(
         user_dn=f'ou=users,{dc}',
         group_dn=f'ou=groups,{dc}',
-        url=f'{ip}:{port}',
+        url=f'ldap://{ip}:{port}',
         bind_dn=f'cn={user},{dc}',
         bind_pass=password,
         user_attr='uid',
