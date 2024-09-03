@@ -300,6 +300,8 @@ def get_config(appname, filename, secretlen=16):
     env_data['conf_url'] = f"{CLIENT_IP}/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
     env_data['secret_key'] = secrets.token_urlsafe(secretlen)
     env_data['admin_users'] = "\'[\"alice.alice@unipg.it\", \"prova@unipg.it\", \"eliasforna@gmail.com\"]\'"
+    env_data['redis_ip'] = configs['redis']['ip']
+    env_data['redis_password'] = configs['redis']['password']
 
     logger.debug(env_data)
     logger.info("Writing %s data", filename)
@@ -310,6 +312,8 @@ def get_config(appname, filename, secretlen=16):
         f.write(f"VAULT_CONF_URL={env_data['conf_url']}\n")
         f.write(f"SECRET_KEY={env_data['secret_key']}\n")
         f.write(f"ADMIN_USERS={env_data['admin_users']}\n")
+        f.write(f"REDIS_IP={env_data['redis_ip']}\n")
+        f.write(f"REDIS_PASSWORD={env_data['redis_password']}\n")
 
 
 def read(secret):
