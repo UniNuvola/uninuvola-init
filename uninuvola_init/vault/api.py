@@ -8,7 +8,7 @@ from uninuvola_init.configs import configs
 
 
 SECRETS_FILE = ".secrets"
-CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}"
+CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}" # TODO: CLIENT_URI
 
 logger.debug("Vault IP: %s", CLIENT_IP)
 _client = hvac.Client(url=CLIENT_IP)
@@ -210,16 +210,23 @@ def oidc(appname, scopename, providername, redirect_uris):
     )
 
     # Create scope
+    _accessor = _client.read('/sys/auth/ldap')['data']['accessor']
     scope_config = {
         "description": "",
-        "template": """
-        {
-            "contact": {
-                "email": {{identity.entity.metadata.email}},
-                "username": {{identity.entity.metadata.username}}
-            }
-        }
+        "template": f"""
+        {{
+            "metadata": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
+        }}
         """
+        # "template": f"""
+        # {{
+        #     "contact": {{
+        #         "email": {{{{identity.entity.metadata.email}}}},
+        #         "username": {{{{identity.entity.metadata.username}}}},
+        #         "name": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
+        #     }}
+        # }}
+        # """
     }
 
     logger.info("Creating application scope: %s", appname)
@@ -290,7 +297,7 @@ def get_config(appname, filename, secretlen=16):
 
     env_data['client_id'] = respone['data']['client_id']
     env_data['client_secret'] = respone['data']['client_secret']
-    env_data['conf_url'] = f"http://127.0.0.1:8200/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
+    env_data['conf_url'] = f"{CLIENT_IP}/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
     env_data['secret_key'] = secrets.token_urlsafe(secretlen)
     env_data['admin_users'] = "\'[\"alice.alice@unipg.it\", \"prova@unipg.it\", \"eliasforna@gmail.com\"]\'"
 
