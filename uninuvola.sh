@@ -68,6 +68,7 @@ cd uninuvola
 
 git clone git@github.com:UniNuvola/vault
 cd vault
+git checkout $(git describe --tags)
 echo "VAULT_IP=$VAULT_IP" > .env
 echo "VAULT_PORT=$VAULT_PORT" >> .env
 docker compose up -d
@@ -77,6 +78,7 @@ docker compose up -d
 cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/openLDAP
 cd openLDAP
+git checkout $(git describe --tags)
 echo "LDAP_IP=$LDAP_IP" > .env
 echo "LDAPADMIN_IP=$LDAPADMIN_IP" >> .env
 echo "PROJECT=$PROJECT" >> .env
@@ -92,6 +94,7 @@ docker compose up -d
 cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/redis
 cd redis
+git checkout $(git describe --tags)
 echo "REDIS_IP=$REDIS_IP" > .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 docker compose up -d
@@ -101,6 +104,7 @@ docker compose up -d
 cd $WORKINGDIR/uninuvola
 git clone git@github.com:UniNuvola/ldapsyncservice
 cd ldapsyncservice/compose
+git checkout $(git describe --tags)
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
 echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
