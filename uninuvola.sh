@@ -1,47 +1,13 @@
 #!/bin/bash
 
+ACTUALDIR=$(pwd)
 WORKINGDIR=$HOME
 CONFIGFILE=config.yaml
 
 if [ ! -f $CONFIGFILE ]; then
 	echo "File $CONFIGFILE not found"
-  	exit 1
+	exit 1
 fi
-
-# Loading Configs
-
-# general
-PROJECT=`cat $CONFIGFILE | yq .general.project`
-DOMAIN=`cat $CONFIGFILE | yq .general.domain`
-
-# vault
-VAULT_IP=`cat $CONFIGFILE | yq .vault.ip -r`
-VAULT_PORT=`cat $CONFIGFILE | yq .vault.port`
-
-# ldap
-LDAP_IP=`cat $CONFIGFILE | yq .openldap.ip -r`
-LDAPADMIN_IP=`cat $CONFIGFILE | yq .ldapadmin.ip -r`
-READONLY_USER=`cat $CONFIGFILE | yq .openldap.readonlyuser`
-READONLY_PASSWORD=`openssl rand -base64 12`
-ADMIN_PASSWORD=`openssl rand -base64 12`
-CONFIG_PASSWORD=`openssl rand -base64 12`
-
-# redis
-REDIS_IP=`cat $CONFIGFILE | yq .redis.ip -r`
-REDIS_PORT=`cat $CONFIGFILE | yq .redis.port`
-REDIS_USERNAME=`cat $CONFIGFILE | yq .redis.username`
-REDIS_PASSWORD=`openssl rand -base64 12`
-
-# ldapsync
-LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
-
-# Add passwords
-# openldap passwords
-sed  -i "/readonlyuser:/a$(printf '\%1s') readonlypassword: \"$READONLY_PASSWORD\"" $CONFIGFILE
-sed  -i "/readonlyuser:/a$(printf '\%1s') password: \"$ADMIN_PASSWORD\"" $CONFIGFILE
-
-# redis passowrd
-sed  -i "/redis:/a$(printf '\%1s') password: \"$REDIS_PASSWORD\"" $CONFIGFILE
 
 
 if [ "a$1" == "a--reinstall" ]; then
@@ -57,30 +23,55 @@ if [ "a$1" == "a--reinstall" ]; then
 	rm -rf uninuvola
 fi
 
-cd $WORKINGDIR
 
-if [ -d uninuvola ]; then
+if [ -d $WORKINGDIR/uninuvola ]; then
 	echo "Directory uninuvola already exists"
   	exit 1
 fi
 
-mkdir uninuvola
-# cp $CONFIGFILE uninuvola
-cd uninuvola
 
-# Vault
+mkdir $WORKINGDIR/uninuvola
+cp $ACTUALDIR/$CONFIGFILE $WORKINGDIR/uninuvola
+cd $WORKINGDIR/uninuvola
+
+
+# Loading General Configs
+PROJECT=`cat $CONFIGFILE | yq .general.project`
+DOMAIN=`cat $CONFIGFILE | yq .general.domain`
+
+
+# --- VAULT
+
+VAULT_IP=`cat $CONFIGFILE | yq .vault.ip -r`
+VAULT_PORT=`cat $CONFIGFILE | yq .vault.port`
 
 git clone git@github.com:UniNuvola/vault
 cd vault
+
 echo "VAULT_IP=$VAULT_IP" > .env
 echo "VAULT_PORT=$VAULT_PORT" >> .env
+
 docker compose up -d
 
-# OpenLDAP
+
+# --- LDAP
 
 cd $WORKINGDIR/uninuvola
+
+LDAP_IP=`cat $CONFIGFILE | yq .openldap.ip -r`
+LDAPADMIN_IP=`cat $CONFIGFILE | yq .ldapadmin.ip -r`
+READONLY_USER=`cat $CONFIGFILE | yq .openldap.readonlyuser`
+READONLY_PASSWORD=`openssl rand -base64 12`
+ADMIN_PASSWORD=`openssl rand -base64 12`
+CONFIG_PASSWORD=`openssl rand -base64 12`
+
+# add passwords to config file
+sed  -i "/readonlyuser:/a$(printf '\%1s') readonlypassword: \"$READONLY_PASSWORD\"" $CONFIGFILE
+sed  -i "/readonlyuser:/a$(printf '\%1s') password: \"$ADMIN_PASSWORD\"" $CONFIGFILE
+
 git clone git@github.com:UniNuvola/openLDAP
 cd openLDAP
+
 echo "LDAP_IP=$LDAP_IP" > .env
 echo "LDAPADMIN_IP=$LDAPADMIN_IP" >> .env
 echo "PROJECT=$PROJECT" >> .env
@@ -89,24 +80,40 @@ echo "READONLY_USER_USERNAME=$READONLY_USER" >> .env
 echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env
 echo "CONFIG_PASSWORD=$CONFIG_PASSWORD" >> .env
 echo "READONLY_USER_PASSWORD=$READONLY_PASSWORD" >> .env
+
 docker compose up -d
 
-# Redis
+# --- REDIS
 
 cd $WORKINGDIR/uninuvola
+
+REDIS_IP=`cat $CONFIGFILE | yq .redis.ip -r`
+REDIS_PORT=`cat $CONFIGFILE | yq .redis.port`
+REDIS_USERNAME=`cat $CONFIGFILE | yq .redis.username`
+REDIS_PASSWORD=`openssl rand -base64 12`
+
+# add passwords to config file
+sed  -i "/redis:/a$(printf '\%1s') password: \"$REDIS_PASSWORD\"" $CONFIGFILE
+
 git clone git@github.com:UniNuvola/redis
 cd redis
+
 echo "REDIS_IP=$REDIS_IP" > .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 docker compose up -d
 
-# Ldapsync
+# --- LDAPSYNC
 
 cd $WORKINGDIR/uninuvola
+
+LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
+
 git clone git@github.com:UniNuvola/ldapsyncservice
 cd ldapsyncservice/compose
+
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
 echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
+
 docker compose up -d
