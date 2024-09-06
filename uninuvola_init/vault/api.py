@@ -8,7 +8,7 @@ from uninuvola_init.configs import configs
 
 
 SECRETS_FILE = ".secrets"
-CLIENT_IP = f"{configs['vault']['ip']}:{configs['vault']['port']}"
+CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}" # TODO: CLIENT_URI
 
 logger.debug("Vault IP: %s", CLIENT_IP)
 _client = hvac.Client(url=CLIENT_IP)
@@ -141,7 +141,7 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
     _client.auth.ldap.configure(
         user_dn=f'ou=users,{dc}',
         group_dn=f'ou=groups,{dc}',
-        url=f'{ip}:{port}',
+        url=f'ldap://{ip}:{port}',
         bind_dn=f'cn={user},{dc}',
         bind_pass=password,
         user_attr='uid',
@@ -210,16 +210,23 @@ def oidc(appname, scopename, providername, redirect_uris):
     )
 
     # Create scope
+    _accessor = _client.read('/sys/auth/ldap')['data']['accessor']
     scope_config = {
         "description": "",
-        "template": """
-        {
-            "contact": {
-                "email": {{identity.entity.metadata.email}},
-                "username": {{identity.entity.metadata.username}}
-            }
-        }
+        "template": f"""
+        {{
+            "metadata": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
+        }}
         """
+        # "template": f"""
+        # {{
+        #     "contact": {{
+        #         "email": {{{{identity.entity.metadata.email}}}},
+        #         "username": {{{{identity.entity.metadata.username}}}},
+        #         "name": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
+        #     }}
+        # }}
+        # """
     }
 
     logger.info("Creating application scope: %s", appname)
@@ -290,9 +297,11 @@ def get_config(appname, filename, secretlen=16):
 
     env_data['client_id'] = respone['data']['client_id']
     env_data['client_secret'] = respone['data']['client_secret']
-    env_data['conf_url'] = f"http://127.0.0.1:8200/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
+    env_data['conf_url'] = f"{CLIENT_IP}/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
     env_data['secret_key'] = secrets.token_urlsafe(secretlen)
     env_data['admin_users'] = "\'[\"alice.alice@unipg.it\", \"prova@unipg.it\", \"eliasforna@gmail.com\"]\'"
+    env_data['redis_ip'] = configs['redis']['ip']
+    env_data['redis_password'] = configs['redis']['password']
 
     logger.debug(env_data)
     logger.info("Writing %s data", filename)
@@ -303,6 +312,8 @@ def get_config(appname, filename, secretlen=16):
         f.write(f"VAULT_CONF_URL={env_data['conf_url']}\n")
         f.write(f"SECRET_KEY={env_data['secret_key']}\n")
         f.write(f"ADMIN_USERS={env_data['admin_users']}\n")
+        f.write(f"REDIS_IP={env_data['redis_ip']}\n")
+        f.write(f"REDIS_PASSWORD={env_data['redis_password']}\n")
 
 
 def read(secret):

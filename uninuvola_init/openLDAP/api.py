@@ -20,7 +20,7 @@ class LdapManager():
 
         # TODO: load from .env
 
-        self.server_uri = f"{configs['openldap']['ip']}:{configs['openldap']['port']}"
+        self.server_uri = f"ldap://{configs['openldap']['ip']}:{configs['openldap']['port']}"
         self.dc = configs['openldap']['dc']
         self.ou_groups = configs['openldap']['ougroups']
         self.ou_users = configs['openldap']['ouusers']

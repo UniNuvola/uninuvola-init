@@ -17,8 +17,8 @@ def deploy():
         ip=configs['openldap']['ip'],
         port=configs['openldap']['port'],
         dc=configs['openldap']['dc'],
-        user=configs['openldap']['readuser'],
-        password=configs['openldap']['readpassword'],
+        user=configs['openldap']['readonlyuser'],
+        password=configs['openldap']['readonlypassword'],
     )
     # api.enable_userpass()
     # api.create_entity()
