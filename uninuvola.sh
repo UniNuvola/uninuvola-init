@@ -120,6 +120,20 @@ echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
 
 docker compose up -d
 
+# TODO: continue editing
+# --- LDAPPROXY
+
+cd $WORKINGDIR/uninuvola
+
+LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip`
+
+git clone git@github.com:UniNuvola/ldapproxy
+cd ldapproxy/compose
+
+echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
+
+docker compose up -d
+
 # --- RUN PYTHON
 
 cd $ACTUALDIR
@@ -140,6 +154,4 @@ WEB_IP=`cat $CONFIGFILE | yq .web.ip -r`
 cd web
 echo "WEB_IP=$WEB_IP" >> .env
 
-# TODO: remove following line. ONLY FOR TESTING
-git checkout docker
 docker compose up -d
