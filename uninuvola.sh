@@ -17,14 +17,13 @@ if [ "a$1" == "a--reinstall" ]; then
 	docker compose down
 	cd $WORKINGDIR/uninuvola/redis
 	docker compose down
-	cd $WORKINGDIR/uninuvola/ldapsyncservice/compose
+	cd $WORKINGDIR/uninuvola/ldapsyncservice/docker
 	docker compose down
-	cd $WORKINGDIR/uninuvola/web
+	cd $WORKINGDIR/uninuvola/web/docker
 	docker compose down
 	cd $WORKINGDIR
 	rm -rf uninuvola
 fi
-
 
 if [ -d $WORKINGDIR/uninuvola ]; then
 	echo "Directory uninuvola already exists"
@@ -46,12 +45,14 @@ DOMAIN=`cat $CONFIGFILE | yq .general.domain`
 
 VAULT_IP=`cat $CONFIGFILE | yq .vault.ip -r`
 VAULT_PORT=`cat $CONFIGFILE | yq .vault.port`
+VAULT_PUBLIC_URL=`cat $CONFIGFILE | yq .vault.public_url`
 
 git clone git@github.com:UniNuvola/vault
 cd vault
 
 echo "VAULT_IP=$VAULT_IP" > .env
 echo "VAULT_PORT=$VAULT_PORT" >> .env
+echo "VAULT_PUBLIC_URL=$VAULT_PUBLIC_URL" >> .env
 
 docker compose up -d
 
@@ -102,45 +103,52 @@ cd redis
 
 echo "REDIS_IP=$REDIS_IP" > .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
+
 docker compose up -d
 
 # --- LDAPSYNC
 
 cd $WORKINGDIR/uninuvola
 
-LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
+LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip -r`
 
 git clone git@github.com:UniNuvola/ldapsyncservice
-cd ldapsyncservice/docker
+cd ldapsyncservice
 
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
 echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
 
+cp -a .env docker/.env
+
+cd docker
 docker compose up -d
 
-# TODO: continue editing
 # --- LDAPPROXY
 
 cd $WORKINGDIR/uninuvola
 
-LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip`
+LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip -r`
 
 git clone git@github.com:UniNuvola/ldapproxy
-cd ldapproxy/docker
+cd ldapproxy
 
 echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
 
+cp -a .env docker/.env
+
+cd docker
 docker compose up -d
 
 # --- RUN PYTHON
 
 cd $ACTUALDIR
-poetry install
-source .venv/bin/activate
+
+cp -a README.md uninuvola_init pyproject.toml poetry.lock $WORKINGDIR/uninuvola 
+
 cd $WORKINGDIR/uninuvola
-uninuvola-init -v DEBUG config.yaml
+docker run -it --network uninuvola --dns 8.8.8.8 -v .:/project harbor1.fisgeo.unipg.it/uninuvola/web:latest /bin/bash -c 'poetry install && uninuvola-init -v DEBUG config.yaml'
 
 # --- WEB 
 
@@ -151,8 +159,16 @@ git clone git@github.com:UniNuvola/web
 cp web.env $WORKINGDIR/uninuvola/web/.env
 
 WEB_IP=`cat $CONFIGFILE | yq .web.ip -r`
+DNS_IP=`cat $CONFIGFILE | yq .web.dns_ip -r`
+WEB_PUBLIC_URL=`cat $CONFIGFILE | yq .web.public_url`
 cd web
+
 echo "WEB_IP=$WEB_IP" >> .env
+echo "WEB_PUBLIC_URL=$WEB_PUBLIC_URL" >> .env
+echo "DNS_IP=$DNS_IP" >> .env
+echo "LDAPSYNC_IP=$LDAPSYNC_IP" >> .env
+
+cp -a .env docker/.env
 
 cd docker
 docker compose up -d

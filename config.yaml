@@ -4,6 +4,7 @@ general:
 
 vault:
   ip: 10.9.245.2
+  public_url: https://vault.uninuvola.unipg.it:8200
   port: 8200
   protocol: http
   oidcs:
@@ -41,6 +42,8 @@ ldapsync:
 
 web:
   ip: 10.9.245.6
+  public_url: https://www.uninuvola.unipg.it
+  dns_ip: 8.8.8.8
 
 ldapproxy:
   ip: 10.9.245.7

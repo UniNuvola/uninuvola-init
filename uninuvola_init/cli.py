@@ -19,6 +19,9 @@ def main():
     for serivce in args.services:
         try:
             _all_services[serivce].deploy()
+        except Exception as e:
+            logger.error(e)
+            sys.exit(1)
         except KeyError:
             logger.error("Wrong service name: %s", serivce)
             sys.exit(1)

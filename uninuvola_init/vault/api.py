@@ -243,7 +243,7 @@ def oidc(appname, scopename, providername, redirect_uris):
     provider_config = {
         "allowed_client_ids": [ client_id ],
         # "issuer": "http://localhost:8200",
-        "issuer": CLIENT_IP,
+        "issuer": configs['vault']['public_url'],
         "scopes_supported": [
             scopename
         ]
@@ -297,7 +297,7 @@ def get_config(appname, filename, secretlen=16):
 
     env_data['client_id'] = respone['data']['client_id']
     env_data['client_secret'] = respone['data']['client_secret']
-    env_data['conf_url'] = f"{CLIENT_IP}/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
+    env_data['conf_url'] = f"{configs['vault']['public_url']}/v1/identity/oidc/provider/{appname}/.well-known/openid-configuration" # TODO: automatico ?
     env_data['secret_key'] = secrets.token_urlsafe(secretlen)
     env_data['admin_users'] = "\'[\"alice.alice@unipg.it\", \"prova@unipg.it\", \"eliasforna@gmail.com\"]\'"
     env_data['redis_ip'] = configs['redis']['ip']
