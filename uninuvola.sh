@@ -111,7 +111,7 @@ cd $WORKINGDIR/uninuvola
 LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip`
 
 git clone git@github.com:UniNuvola/ldapsyncservice
-cd ldapsyncservice/compose
+cd ldapsyncservice/docker
 
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
 echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
@@ -128,7 +128,7 @@ cd $WORKINGDIR/uninuvola
 LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip`
 
 git clone git@github.com:UniNuvola/ldapproxy
-cd ldapproxy/compose
+cd ldapproxy/docker
 
 echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
 
@@ -154,4 +154,5 @@ WEB_IP=`cat $CONFIGFILE | yq .web.ip -r`
 cd web
 echo "WEB_IP=$WEB_IP" >> .env
 
+cd docker
 docker compose up -d
