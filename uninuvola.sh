@@ -19,6 +19,8 @@ if [ "a$1" == "a--reinstall" ]; then
 	docker compose down
 	cd $WORKINGDIR/uninuvola/ldapsyncservice/compose
 	docker compose down
+	cd $WORKINGDIR/uninuvola/web
+	docker compose down
 	cd $WORKINGDIR
 	rm -rf uninuvola
 fi
@@ -115,5 +117,41 @@ echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
 echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
+
+docker compose up -d
+
+# TODO: continue editing
+# --- LDAPPROXY
+
+cd $WORKINGDIR/uninuvola
+
+LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip`
+
+git clone git@github.com:UniNuvola/ldapproxy
+cd ldapproxy/compose
+
+echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
+
+docker compose up -d
+
+# --- RUN PYTHON
+
+cd $ACTUALDIR
+poetry install
+source .venv/bin/activate
+cd $WORKINGDIR/uninuvola
+uninuvola-init -v DEBUG config.yaml
+
+# --- WEB 
+
+cd $WORKINGDIR/uninuvola
+git clone git@github.com:UniNuvola/web
+
+# copy generated envs
+cp web.env $WORKINGDIR/uninuvola/web/.env
+
+WEB_IP=`cat $CONFIGFILE | yq .web.ip -r`
+cd web
+echo "WEB_IP=$WEB_IP" >> .env
 
 docker compose up -d
