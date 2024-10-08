@@ -10,15 +10,17 @@ vault:
   oidcs:
     web:
       appname: web
-      scopename: web
+      scopes: 
+        - { "name": "web", "template": "{{ \"metadata\": {{{{identity.entity.aliases.{_accessor}.metadata}}}} }}" }
       providername: web
       redirect_uris: https://www.uninuvola.unipg.it/auth
       secretfile: web.env
     jupyter:
       appname: jupyter
-      scopename: jupyter
+      scopes: 
+        - { "name": "user", "template": "{{ \"username\": {{{{identity.entity.aliases.{_accessor}.metadata.name}}}} }}" }
       providername: jupyter
-      redirect_uris: https://compute.uninuvola.unipg.it/jup
+      redirect_uris: https://compute.uninuvola.unipg.it/hub/oauth_callback
       secretfile: jupyter.env
 
 openldap:

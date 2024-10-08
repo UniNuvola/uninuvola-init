@@ -175,7 +175,7 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
 #         logger.debug(f"{user['name']} response: {create_response}")
 
 
-def oidc(appname, scopename, providername, redirect_uris):
+def oidc(appname, scopes, providername, redirect_uris):
     """Configure Vault as an OIDC Provider
 
     \b
@@ -203,7 +203,7 @@ def oidc(appname, scopename, providername, redirect_uris):
 
     logger.info("Creating application: %s", appname)
     logger.debug(app_config)
-
+    
     _client.write_data(
         path=f"/identity/oidc/client/{appname}",
         data=app_config
@@ -211,13 +211,23 @@ def oidc(appname, scopename, providername, redirect_uris):
 
     # Create scope
     _accessor = _client.read('/sys/auth/ldap')['data']['accessor']
-    scope_config = {
-        "description": "",
-        "template": f"""
-        {{
-            "metadata": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
-        }}
-        """
+    scope_list = []
+    for scope in scopes:
+        scope_list.append(scope['name'])
+        scopename = scope['name']
+        scope_template = scope['template']
+        scope_config = {
+            "description": "",
+            "template": scope_template.format(_accessor=_accessor)
+        }
+
+    # scope_config = {
+    #     "description": "",
+    #     "template": f"""
+    #     {{
+    #         "metadata": {{{{identity.entity.aliases.{_accessor}.metadata}}}}
+    #     }}
+    #     """
         # "template": f"""
         # {{
         #     "contact": {{
@@ -227,15 +237,15 @@ def oidc(appname, scopename, providername, redirect_uris):
         #     }}
         # }}
         # """
-    }
+    # }
 
-    logger.info("Creating application scope: %s", appname)
-    logger.debug(scope_config)
+        logger.info("Creating application scope: %s", appname)
+        logger.debug(scope_config)
 
-    _client.write_data(
-        path=f"/identity/oidc/scope/{scopename}",
-        data=scope_config
-    )
+        _client.write_data(
+            path=f"/identity/oidc/scope/{scopename}",
+            data=scope_config
+        )
 
     # Update Provider
     client_id = _client.read(f"/identity/oidc/client/{appname}")['data']['client_id']
@@ -244,9 +254,7 @@ def oidc(appname, scopename, providername, redirect_uris):
         "allowed_client_ids": [ client_id ],
         # "issuer": "http://localhost:8200",
         "issuer": configs['vault']['public_url'],
-        "scopes_supported": [
-            scopename
-        ]
+        "scopes_supported": scope_list,
     }
 
     logger.info("Creating application provider: %s", providername)
