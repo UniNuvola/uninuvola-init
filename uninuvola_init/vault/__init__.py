@@ -30,11 +30,11 @@ def deploy():
     for _, oidc_conf in configs['vault']['oidcs'].items():
         api.oidc(
             appname=oidc_conf['appname'],
-            scopename=oidc_conf['scopename'],
+            scopes=oidc_conf['scopes'],
             providername=oidc_conf['providername'],
             redirect_uris=oidc_conf['redirect_uris'],
         )
 
-        api.get_config(appname='web', filename=oidc_conf['secretfile'])
+        api.get_config(appname=oidc_conf['appname'], filename=oidc_conf['secretfile'])
     
     api.logout()

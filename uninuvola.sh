@@ -30,7 +30,6 @@ if [ -d $WORKINGDIR/uninuvola ]; then
   	exit 1
 fi
 
-
 mkdir $WORKINGDIR/uninuvola
 cp $ACTUALDIR/$CONFIGFILE $WORKINGDIR/uninuvola
 cd $WORKINGDIR/uninuvola
