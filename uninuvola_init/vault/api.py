@@ -203,8 +203,6 @@ def oidc(appname, scopes, providername, redirect_uris):
 
     logger.info("Creating application: %s", appname)
     logger.debug(app_config)
-    
-    
     _client.write_data(
         path=f"/identity/oidc/client/{appname}",
         data=app_config
