@@ -25,4 +25,3 @@ def _config_parser(path) -> dict:
 
 
 configs = _config_parser(args.config)
-print(configs)
