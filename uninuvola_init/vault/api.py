@@ -265,21 +265,31 @@ def oidc(appname, scopes, providername, redirect_uris):
     )
 
 
-def create_group():
+def create_group(group_name: str):
     """Create the default group.
     """
 
     _ = _auth()
 
-    logger.info("Creating default group")
-
+    logger.info("Creating group %s", group_name)
     create_response = _client.secrets.identity.create_or_update_group(
-            name='default',
-            # metadata=dict(extra_data='we gots em'),
+        name=group_name,
+        group_type='external'
     )
+    logger.debug('RESPONSE: %s', create_response)
 
     group_id = create_response['data']['id']
-    logger.info("Group ID for 'default' is: %s", group_id)
+    logger.debug("Group ID for '%s' is: %s", group_name, group_id)
+
+    logger.info('Creating group alias %s', group_name)
+
+    _accessor = _client.read('/sys/auth/ldap')['data']['accessor']
+    create_response = _client.secrets.identity.create_or_update_group_alias(
+        name=group_name,
+        mount_accessor=_accessor,
+        canonical_id=group_id,
+    )
+    logger.debug('RESPONSE: %s', create_response)
 
 
 def get_config(appname, filename, secretlen=16):

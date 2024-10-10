@@ -19,6 +19,7 @@ vault:
       appname: jupyter
       scopes: 
         - { "name": "user", "template": "{{ \"username\": {{{{identity.entity.aliases.{_accessor}.metadata.name}}}} }}" }
+        - { "name": "groups", "template": "{{ \"groups\": {{{{identity.entity.groups.names }}}} }}" }
       providername: jupyter
       redirect_uris: https://compute.uninuvola.unipg.it/hub/oauth_callback
       secretfile: jupyter.env
@@ -26,6 +27,9 @@ vault:
 openldap:
   ip: 10.9.245.1
   port: 389
+  groups:
+    - admin
+    - users
   ougroups: groups
   ouusers: users
   user: admin

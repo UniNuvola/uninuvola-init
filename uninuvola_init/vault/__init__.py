@@ -23,7 +23,9 @@ def deploy():
     # api.enable_userpass()
     # api.create_entity()
     # api.set_users()
-    api.create_group()
+    for group in configs['openldap']['groups']:
+        api.create_group(group)
+
     api.custom_ui()
 
     # creating oidc application and retriving configs
