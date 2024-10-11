@@ -170,7 +170,7 @@ class LdapManager():
 
         return response
 
-    def add_groups(self, starting_gid=500, groups=('admin', 'users',)):
+    def add_groups(self, starting_gid=500, groups=('users', 'admin',)):
         """
         """
         response = self.__add_organizational_units(self.ou_groups)
