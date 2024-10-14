@@ -42,9 +42,12 @@ redis:
   ip: 10.9.245.4
   port: 6379
   username: default
+  database: 0
 
 ldapsync:
   ip: 10.9.245.5
+  source_uri: ldap://141.250.2.135
+  source_basedn: dc=unipg,dc=it
 
 web:
   ip: 10.9.245.6

@@ -3,6 +3,7 @@
 ACTUALDIR=$(pwd)
 WORKINGDIR=$HOME
 CONFIGFILE=config.yaml
+SECRETFILE=secrets.yaml
 
 if [ ! -f $CONFIGFILE ]; then
 	echo "File $CONFIGFILE not found"
@@ -19,6 +20,8 @@ if [ "a$1" == "a--reinstall" ]; then
 	docker compose down
 	cd $WORKINGDIR/uninuvola/ldapsyncservice/docker
 	docker compose down
+	cd $WORKINGDIR/uninuvola/ldapproxy/docker
+	docker compose down
 	cd $WORKINGDIR/uninuvola/web/docker
 	docker compose down
 	cd $WORKINGDIR
@@ -32,6 +35,7 @@ fi
 
 mkdir $WORKINGDIR/uninuvola
 cp $ACTUALDIR/$CONFIGFILE $WORKINGDIR/uninuvola
+cp $ACTUALDIR/$SECRETFILE $WORKINGDIR/uninuvola
 cd $WORKINGDIR/uninuvola
 
 
@@ -92,6 +96,7 @@ cd $WORKINGDIR/uninuvola
 REDIS_IP=`cat $CONFIGFILE | yq .redis.ip -r`
 REDIS_PORT=`cat $CONFIGFILE | yq .redis.port`
 REDIS_USERNAME=`cat $CONFIGFILE | yq .redis.username`
+REDIS_DATABASE=`cat $CONFIGFILE | yq .redis.database`
 REDIS_PASSWORD=`openssl rand -base64 12`
 
 # add passwords to config file
@@ -105,35 +110,44 @@ echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
 
 docker compose up -d
 
-# --- LDAPSYNC
-
-cd $WORKINGDIR/uninuvola
-
-LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip -r`
-
-git clone git@github.com:UniNuvola/ldapsyncservice
-cd ldapsyncservice
-
-echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
-echo "REDIS_URI=$REDIS_IP:$REDIS_PORT" >> .env
-echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
-echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
-
-cp -a .env docker/.env
-
-cd docker
-docker compose up -d
-
 # --- LDAPPROXY
 
 cd $WORKINGDIR/uninuvola
 
 LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip -r`
+LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip -r`
+LDAP_SOURCE_URI=`cat $CONFIGFILE | yq .ldapsync.source_uri -r`
+LDAP_SOURCE_BASEDN=`cat $CONFIGFILE | yq .ldapsync.source_basedn -r`
+LDAP_SOURCE_BINDDN=`cat $SECRETFILE | yq .ldapsync.source_binddn -r`
+LDAP_SOURCE_PASSWORD=`cat $SECRETFILE | yq .ldapsync.source_password -r`
+LDAP_DESTINATION_URI="ldap://$LDAP_IP"
+LDAP_DESTINATION_USERS_BASEDN="ou=users,dc=uninuvola,dc=unipg,dc=it"
+LDAP_DESTINATION_GROUPS_BASEDN="ou=groups,dc=uninuvola,dc=unipg,dc=it"
+LDAP_DESTINATION_BINDDN="cn=admin,dc=uninuvola,dc=unipg,dc=it"
+LDAP_DESTINATION_PASSWORD=$ADMIN_PASSWORD
+
 
 git clone git@github.com:UniNuvola/ldapproxy
 cd ldapproxy
 
 echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
+
+echo "debug: true" > config.yaml
+echo "proxy:" >> config.yaml
+echo "  basedn: \"$LDAP_DESTINATION_USERS_BINDDN\"" >> config.yaml
+echo "  binddn: \"cn=admin,ou=users,dc=uninuvola,dc=unipg,dc=it\"" >> config.yaml
+echo "  password: \"$FFF\"" >> config.yaml
+echo "endpoints:" >> config.yaml
+echo "  - name: uninuvola" >> config.yaml
+echo "    uri: \"$LDAP_DESTINATION_URI\"" >> config.yaml
+echo "    basedn: \"$LDAP_DESTINATION_USERS_BASEDN\"" >> config.yaml
+echo "    binddn: \"$LDAP_DESTINATION_BINDDN\"" >> config.yaml
+echo "    password: \"$LDAP_DESTINATION_PASSWORD\"" >> config.yaml
+echo "  - name: unipg" >> config.yaml
+echo "    uri: \"$LDAP_SOURCE_URI\"" >> config.yaml
+echo "    basedn: \"$LDAP_SOURCE_BASEDN\"" >> config.yaml
+echo "    binddn: \"$LDAP_SOURCE_BINDDN\"" >> config.yaml
+echo "    password: \"$LDAP_SOURCE_PASSWORD\"" >> config.yaml
 
 cp -a .env docker/.env
 
@@ -148,6 +162,33 @@ cp -a README.md uninuvola_init pyproject.toml poetry.lock $WORKINGDIR/uninuvola
 
 cd $WORKINGDIR/uninuvola
 docker run -it --network uninuvola --dns 8.8.8.8 -v .:/project harbor1.fisgeo.unipg.it/uninuvola/web:latest /bin/bash -c 'poetry install && uninuvola-init -v DEBUG config.yaml'
+
+# --- LDAPSYNC
+
+cd $WORKINGDIR/uninuvola
+
+git clone git@github.com:UniNuvola/ldapsyncservice
+cd ldapsyncservice
+
+echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
+echo "REDIS_URI=\"$REDIS_IP:$REDIS_PORT\"" >> .env
+echo "REDIS_DATABASE=$REDIS_DATABASE" >> .env
+echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
+echo "REDIS_USERNAME=$REDIS_USERNAME" >> .env
+echo "LDAP_SOURCE_URI=\"$LDAP_SOURCE_URI\"" >> .env
+echo "LDAP_SOURCE_BASEDN=\"$LDAP_SOURCE_BASEDN\"" >> .env
+echo "LDAP_SOURCE_BINDDN=\"$LDAP_SOURCE_BINDDN\"" >> .env
+echo "LDAP_SOURCE_PASSWORD=\"$LDAP_SOURCE_PASSWORD\"" >> .env
+echo "LDAP_DESTINATION_URI=\"$LDAP_DESTINATION_URI\"" >> .env
+echo "LDAP_DESTINATION_USERS_BASEDN=\"$LDAP_DESTINATION_USERS_BINDDN\"" >> .env
+echo "LDAP_DESTINATION_GROUPS_BASEDN=\"$LDAP_DESTINATION_GROUPS_BINDDN\"" >> .env
+echo "LDAP_DESTINATION_BINDDN=\"$LDAP_DESTINATION_BINDDN\"" >> .env
+echo "LDAP_DESTINATION_PASSWORD=\"$LDAP_DESTINATION_PASSWORD\"" >> .env
+
+cp -a .env docker/.env
+
+cd docker
+docker compose up -d
 
 # --- WEB 
 
