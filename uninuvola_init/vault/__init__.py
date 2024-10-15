@@ -14,11 +14,16 @@ def deploy():
     api.init()
     api.unseal()
     api.enable_openldap(
-        ip=configs['openldap']['ip'],
-        port=configs['openldap']['port'],
-        dc=configs['openldap']['dc'],
-        user=configs['openldap']['readonlyuser'],
-        password=configs['openldap']['readonlypassword'],
+        ip=configs['ldapproxy']['ip'],
+        port=configs['ldapproxy']['port'],
+        dc=configs['ldapproxy']['dc'],
+        user=configs['ldapproxy']['user'],
+        password=configs['ldapproxy']['password'],
+        # ip=configs['openldap']['ip'],
+        # port=configs['openldap']['port'],
+        # dc=configs['openldap']['dc'],
+        # user=configs['openldap']['readonlyuser'],
+        # password=configs['openldap']['readonlypassword'],
     )
     # api.enable_userpass()
     # api.create_entity()

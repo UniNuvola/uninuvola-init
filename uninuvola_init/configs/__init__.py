@@ -10,6 +10,7 @@ def _config_parser(path) -> dict:
             try:
                 content = safe_load(stream)
                 content['openldap']['dc'] = ",".join([f'dc={x}' for x in content['general']['domain'].split('.')])
+                content['ldapproxy']['dc'] = ",".join([f'dc={x}' for x in content['general']['domain'].split('.')])
 
                 logger.debug("Config file '%s': %s", path, content)
 

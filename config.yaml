@@ -56,5 +56,4 @@ web:
 
 ldapproxy:
   ip: 10.9.245.7
-  port: 1111
-  endpoint: 1111
+  port: 389
