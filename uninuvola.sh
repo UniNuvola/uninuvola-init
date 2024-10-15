@@ -11,7 +11,7 @@ if [ ! -f $CONFIGFILE ]; then
 fi
 
 
-if [ "a$1" == "a--reinstall" ]; then
+if [[ "a$1" == "a--reinstall" || "a$1" == "a--stop" ]]; then
 	cd $WORKINGDIR/uninuvola/vault
 	docker compose down
 	cd $WORKINGDIR/uninuvola/openLDAP
@@ -28,6 +28,10 @@ if [ "a$1" == "a--reinstall" ]; then
 	rm -rf uninuvola
 fi
 
+if [ "a$1" == "a--stop" ]; then
+	exit 0
+fi
+
 if [ -d $WORKINGDIR/uninuvola ]; then
 	echo "Directory uninuvola already exists"
   	exit 1
@@ -35,7 +39,6 @@ fi
 
 mkdir $WORKINGDIR/uninuvola
 cp $ACTUALDIR/$CONFIGFILE $WORKINGDIR/uninuvola
-cp $ACTUALDIR/$SECRETFILE $WORKINGDIR/uninuvola
 cd $WORKINGDIR/uninuvola
 
 
@@ -70,6 +73,7 @@ READONLY_USER=`cat $CONFIGFILE | yq .openldap.readonlyuser`
 READONLY_PASSWORD=`openssl rand -base64 12`
 ADMIN_PASSWORD=`openssl rand -base64 12`
 CONFIG_PASSWORD=`openssl rand -base64 12`
+LDAP_PROXY_PASSWORD=`openssl rand -base64 12`
 
 # add passwords to config file
 sed  -i "/readonlyuser:/a$(printf '\%1s') readonlypassword: \"$READONLY_PASSWORD\"" $CONFIGFILE
@@ -118,14 +122,22 @@ LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip -r`
 LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip -r`
 LDAP_SOURCE_URI=`cat $CONFIGFILE | yq .ldapsync.source_uri -r`
 LDAP_SOURCE_BASEDN=`cat $CONFIGFILE | yq .ldapsync.source_basedn -r`
-LDAP_SOURCE_BINDDN=`cat $SECRETFILE | yq .ldapsync.source_binddn -r`
-LDAP_SOURCE_PASSWORD=`cat $SECRETFILE | yq .ldapsync.source_password -r`
+LDAP_SOURCE_BINDDN=`cat $ACTUALDIR/$SECRETFILE | yq .ldapsync.source_binddn -r`
+LDAP_SOURCE_PASSWORD=`cat $ACTUALDIR/$SECRETFILE | yq .ldapsync.source_password -r`
+
+# add passwords to config file
+sed  -i "/ldapsync:/a$(printf '\%1s') source_binddn: \"$LDAP_SOURCE_BINDDN\"" $CONFIGFILE
+sed  -i "/ldapsync:/a$(printf '\%1s') source_password: \"$LDAP_SOURCE_PASSWORD\"" $CONFIGFILE
+
 LDAP_DESTINATION_URI="ldap://$LDAP_IP"
 LDAP_DESTINATION_USERS_BASEDN="ou=users,dc=uninuvola,dc=unipg,dc=it"
 LDAP_DESTINATION_GROUPS_BASEDN="ou=groups,dc=uninuvola,dc=unipg,dc=it"
 LDAP_DESTINATION_BINDDN="cn=admin,dc=uninuvola,dc=unipg,dc=it"
 LDAP_DESTINATION_PASSWORD=$ADMIN_PASSWORD
 
+
+sed  -i "/ldapproxy:/a$(printf '\%1s') password: \"$LDAP_PROXY_PASSWORD\"" $CONFIGFILE
+sed  -i "/ldapproxy:/a$(printf '\%1s') user: \"admin\"" $CONFIGFILE
 
 git clone git@github.com:UniNuvola/ldapproxy
 cd ldapproxy
@@ -134,9 +146,9 @@ echo "LDAPPROXY_IP=$LDAPPROXY_IP" > .env
 
 echo "debug: true" > config.yaml
 echo "proxy:" >> config.yaml
-echo "  basedn: \"$LDAP_DESTINATION_USERS_BINDDN\"" >> config.yaml
-echo "  binddn: \"cn=admin,ou=users,dc=uninuvola,dc=unipg,dc=it\"" >> config.yaml
-echo "  password: \"$FFF\"" >> config.yaml
+echo "  basedn: \"$LDAP_DESTINATION_USERS_BASEDN\"" >> config.yaml
+echo "  binddn: \"$LDAP_DESTINATION_BINDDN\"" >> config.yaml
+echo "  password: \"$LDAP_PROXY_PASSWORD\"" >> config.yaml
 echo "endpoints:" >> config.yaml
 echo "  - name: uninuvola" >> config.yaml
 echo "    uri: \"$LDAP_DESTINATION_URI\"" >> config.yaml
@@ -150,6 +162,7 @@ echo "    binddn: \"$LDAP_SOURCE_BINDDN\"" >> config.yaml
 echo "    password: \"$LDAP_SOURCE_PASSWORD\"" >> config.yaml
 
 cp -a .env docker/.env
+cp -a config.yaml docker/config.yaml
 
 cd docker
 docker compose up -d
@@ -180,8 +193,8 @@ echo "LDAP_SOURCE_BASEDN=\"$LDAP_SOURCE_BASEDN\"" >> .env
 echo "LDAP_SOURCE_BINDDN=\"$LDAP_SOURCE_BINDDN\"" >> .env
 echo "LDAP_SOURCE_PASSWORD=\"$LDAP_SOURCE_PASSWORD\"" >> .env
 echo "LDAP_DESTINATION_URI=\"$LDAP_DESTINATION_URI\"" >> .env
-echo "LDAP_DESTINATION_USERS_BASEDN=\"$LDAP_DESTINATION_USERS_BINDDN\"" >> .env
-echo "LDAP_DESTINATION_GROUPS_BASEDN=\"$LDAP_DESTINATION_GROUPS_BINDDN\"" >> .env
+echo "LDAP_DESTINATION_USERS_BASEDN=\"$LDAP_DESTINATION_USERS_BASEDN\"" >> .env
+echo "LDAP_DESTINATION_GROUPS_BASEDN=\"$LDAP_DESTINATION_GROUPS_BASEDN\"" >> .env
 echo "LDAP_DESTINATION_BINDDN=\"$LDAP_DESTINATION_BINDDN\"" >> .env
 echo "LDAP_DESTINATION_PASSWORD=\"$LDAP_DESTINATION_PASSWORD\"" >> .env
 
