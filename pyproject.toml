@@ -16,6 +16,8 @@ uninuvola-init = "uninuvola_init.cli:main"
 
 [tool.poetry.group.docs.dependencies]
 pylint = "^3.2.6"
+pyment = "^0.3.3"
+pydoc-markdown = "^4.8.2"
 
 [build-system]
 requires = ["poetry-core"]
