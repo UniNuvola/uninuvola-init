@@ -28,8 +28,8 @@ openldap:
   ip: 10.9.245.1
   port: 389
   groups:
-    - admin
     - users
+    - admin
   ougroups: groups
   ouusers: users
   user: admin
