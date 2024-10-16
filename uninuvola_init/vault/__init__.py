@@ -7,6 +7,14 @@ def deploy():
     """Deploy procedure.
 
     Runs every CLI commands needed for auto-deploy a new Vault container.
+    In order, this function does:
+    
+    1. Init Vault procedure (generates keys and secrets)
+    1. Unseal the Vault
+    1. Enables openLDAP auth method
+    1. Creates given Vault's groups (according to openLDAP's groups)
+    1. Enable custom UI
+    1. Creates OIDC apps
     """
 
     logger.info("Deploying VAULT")
