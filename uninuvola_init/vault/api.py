@@ -1,3 +1,7 @@
+"""Vault's API Module
+
+Here are stored all needed functions to initialize and set up Vault.
+"""
 import json
 import sys
 import secrets
@@ -8,7 +12,13 @@ from uninuvola_init.configs import configs
 
 
 SECRETS_FILE = ".secrets"
-CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}" # TODO: CLIENT_URI
+"""Secrets file path"""
+
+CLIENT_IP = f"{configs['vault']['protocol']}://{configs['vault']['ip']}:{configs['vault']['port']}"
+"""Vault Server URI
+```<PROTOCOL>://<VAULT'S IP>:<VAULT'S PORT>```
+"""
+
 
 logger.debug("Vault IP: %s", CLIENT_IP)
 _client = hvac.Client(url=CLIENT_IP)
@@ -16,8 +26,10 @@ _client = hvac.Client(url=CLIENT_IP)
 
 def _auth():
     """Authenticate client using saved secrets.
-    """
 
+    Loads secrets from `SECRETS_FILE` path.
+    This must be a JSON formatted file. Terminates execution if file not found.
+    """
     logger.info("Client Authenticated: %s", _client.is_authenticated())
     logger.info("Client Inizialized: %s", _client.sys.is_initialized())
 
@@ -49,9 +61,16 @@ def _auth():
 
 def init(shares=5, threshold=3):
     """Initialize Vault when first created.
-
+    
     Initialize the Vault container and save the resulting secrets (in json format)
     in .env file.
+
+    Args:
+      shares (int):  (Default value = 5)
+      threshold (int):  (Default value = 3)
+
+    Returns:
+
     """
 
     logger.info("Running init procedure")
@@ -71,9 +90,9 @@ def init(shares=5, threshold=3):
 
 
 def unseal():
-    """Unseal the Vault.
-
-    Unseal the Vault by using 3 keys (secrets) generated during the init phase.
+    """Unseal Vault.
+    
+    Unseal Vault by using 3 keys (secrets) generated during the init phase.
     """
 
     _, keys = _auth()
@@ -92,7 +111,8 @@ def unseal():
 
     logger.info("Client Sealed: %s", _client.sys.is_sealed())
 
-# WARNING: could not be usefeull
+
+# WARNING: could not be useful
 # def create_entity():
 #     """Creates entities.
 #
@@ -124,8 +144,21 @@ def unseal():
 #         logger.info(f"Alias ID for {user['name']} is: {alias_id}")
 
 
-def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", description="auth method"):
+def enable_openldap(ip:str, port:str, dc:str, user:str, password:str, ldap_auth_path="ldap", description="auth method"):
     """Enable openldap/ auth method.
+
+    Args:
+      ip (str): openLDAP's IP address
+      port (str): openLDAP's IP port
+      dc (str): dc string. Example: `dc=uninuvola,dc=unipg,dc=it`
+      user (str): openLDAP's username
+      password (str): openLDAP's password
+      ldap_auth_path (str, optional): custom authenticator path.
+        This will create a `/auth/<ldap_auth_path>` uri in Vault. (Default value = "ldap")
+      description (str, optional): optional authenticator description (Default value = "auth method")
+
+    Returns:
+
     """
 
     _ = _auth()
@@ -175,13 +208,23 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
 #         logger.debug(f"{user['name']} response: {create_response}")
 
 
-def oidc(appname, scopes, providername, redirect_uris):
+def oidc(appname:str, scopes:list, providername:str, redirect_uris:str):
     """Configure Vault as an OIDC Provider
 
-    \b
-    - Creates the Application with the redirect uris,
-    - Creates the default Scope
-    - Set the default provider configs
+    This function in order does:
+
+        - Creates the Application with the redirect uris,
+        - Creates the default Scopes
+        - Set the default provider configs
+
+    Args:
+      appname (str): OIDC Application name 
+      scopes (list): a list of scopes. A scope is a json formatted string
+      providername (str): OIDC Application provider name 
+      redirect_uris (str): OIDC Application allowed redirect url
+
+    Returns:
+
     """
     _ = _auth()
 
@@ -266,7 +309,17 @@ def oidc(appname, scopes, providername, redirect_uris):
 
 
 def create_group(group_name: str):
-    """Create the default group.
+    """Create a group and alias with given name.
+
+    Groups must be manually created (unlike Entities) in order to enable Vault to
+    accept openLDAP groups. Aliases are used to link a Vault's Group to an external
+    authenticator (e.g. openLDAP).
+
+    Args:
+      group_name (str): group name
+
+    Returns:
+
     """
 
     _ = _auth()
@@ -292,16 +345,23 @@ def create_group(group_name: str):
     logger.debug('RESPONSE: %s', create_response)
 
 
-def get_config(appname, filename, secretlen=16):
-    """Generate config for the WepApp
+def get_config(appname:str, filename:str, secretlen=16):
+    """Generates config file for given OIDC Application.
 
-    \b
-    Generates a .env file with the required settings:
+    Generates a `.env` file with the required settings:
         - OIDC Client ID
         - OIDC Client Secret
         - OIDC Conf URL
         - A Secret Key
-        - Admin users
+        - Redis ip and password
+
+    Args:
+      appname (str): OIDC Application name 
+      filename (str): Resulting config file path 
+      secretlen (int): Secret length (Default value = 16)
+
+    Returns:
+
     """
     _ = _auth()
 
@@ -333,14 +393,16 @@ def get_config(appname, filename, secretlen=16):
         f.write(f"REDIS_PASSWORD={env_data['redis_password']}\n")
 
 
-def read(secret):
-    """Read specified Vault secrets config
+def read(secret:str):
+    """Read specified Vault secrets config.
+    
+    Args:
+      secret (str): Secret to read. Could be one of the following
+        - `keys`: secret keys used to unseal Vault
+        - `token`: the root token used to authenticate to Vault
+        - `all`: both "keys" and "token"
 
-    \b
-    You can read:
-        - "keys": secret keys used to unseal Vault
-        - "token": the root token used to authenticate to Vault
-        - "all": both "keys" and "token"
+    Returns:
 
     """
 
@@ -364,6 +426,7 @@ def read(secret):
 
 
 def logout():
+    """Logs out from Vault"""
     logger.info("Loggin out")
 
     # revoke_token=True revoke the root_token created !
@@ -372,6 +435,9 @@ def logout():
 
 
 def custom_ui():
+    """Generates custom Vault's auth page by
+    foring to display only LDAP form
+    """
     _ = _auth()
     
     tune_conf = {
