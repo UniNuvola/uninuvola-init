@@ -7,8 +7,9 @@ from uninuvola_init.configs import configs
 
 
 class LdapManager():
-    """
+    """openLDAP Manager
 
+    This class is able to fully prepare openLDAP to be used in production.
     """
 
     conn = None
@@ -18,14 +19,13 @@ class LdapManager():
 
         self.__envfile = envfile
 
-        # TODO: load from .env
-
         self.server_uri = f"ldap://{configs['openldap']['ip']}:{configs['openldap']['port']}"
         self.dc = configs['openldap']['dc']
         self.ou_groups = configs['openldap']['ougroups']
         self.ou_users = configs['openldap']['ouusers']
-        self.conn_str = f'cn={configs['openldap']['user']},{self.dc}'
+        self.conn_str = f"cn={configs['openldap']['user']},{self.dc}"
 
+        # WARNING: no longer needed.
         self.USERS = [
             {'user_id':'nv98001', 'first_name': 'nicolo', 'last_name': 'vescera', 'password': '1234patata', 'ou':self.ou_users, 'uid':1000, 'gid':501},
             {'user_id':'ff99003', 'first_name': 'fabrizio', 'last_name': 'fagiolo', 'password': '1234patata', 'ou':self.ou_users, 'uid':1001, 'gid':501},
@@ -45,7 +45,9 @@ class LdapManager():
         self.__auth()
 
     def __auth(self):
-        """
+        """Authenticate to openLDAP server
+
+        Must be used only once inside the constructor.
         """
         if self.conn is None:
             logger.debug("Connecting to %s", self.server_uri)
@@ -80,7 +82,16 @@ class LdapManager():
 
             logger.info("Successfully connected !")
 
-    def __add_organizational_units(self, ou_name):
+    def __add_organizational_units(self, ou_name: str) -> str:
+        """Creates a new openLDAP's Organizational Unit with given name
+
+        Args:
+            ou_name (str): OrganizationalUnit's name
+
+        Returns:
+            response (str): operation result status.
+
+        """
         ldap_attr = {
             'objectClass': ['top', 'organizationalUnit']
         }
@@ -106,7 +117,17 @@ class LdapManager():
 
         return response
 
-    def __add_posixgroup(self, group_name, group_id):
+    def __add_posixgroup(self, group_name: str, group_id: int) -> str:
+        """Creates an openLDAP's PosixGroup with given name
+
+        Args:
+            group_name (str): PosixGroup's name
+            group_id (int): PosixGroup's id
+
+        Returns:
+            response (str): operation result status.
+
+        """
         ldap_attr = {
             'objectClass': ['top', 'posixGroup'],
             'gidNumber': f'{group_id}',
@@ -134,7 +155,25 @@ class LdapManager():
         return response
 
     # WARNING: users are not needed in production !!
-    def __add_user(self, user_id:str, first_name, last_name, password:str, ou, uid:int, gid:int):
+    def __add_user(self, user_id: str, first_name: str, last_name: str, password: str, ou :str, uid: int, gid: int) -> str:
+        """Creates an openLDAP's user with given infos.
+
+        > [!WARNING]
+        > This function is not used ! Users creation is no more needed
+
+        Args:
+            user_id (str): User's unique username
+            first_name (str): User's first name
+            last_name (str): User's last name
+            password (str): User's password
+            ou: User's OrganizationalUnit name
+            uid (int): User's id
+            gid (int): Users' group id
+
+        Returns:
+            response (str): operation result status.
+
+        """
         common_name = f'{first_name} {last_name}'
 
         ldap_attr = {
@@ -171,7 +210,16 @@ class LdapManager():
         return response
 
     def add_groups(self, starting_gid=500, groups=('admin', 'users',)):
-        """
+        """Creates given Groups
+
+        Group's id starts from `starting_gid` and then is incremented by 1.
+
+        Args:
+          starting_gid:  Firs Group id (Default value = 500)
+          groups:  List of all groups to create (Default value = (['users','admin'])
+
+        Returns:
+
         """
         response = self.__add_organizational_units(self.ou_groups)
         logger.info("OU %s: %s", self.ou_groups, response)
@@ -185,7 +233,10 @@ class LdapManager():
 
 
     def add_users(self):
-        """
+        """Creates Users
+
+        > [!WARNING]
+        > This function is not used ! Users creation is no more needed
         """
         response = self.__add_organizational_units(self.ou_users)
         logger.info("OU %s: %s", self.ou_users, response)
@@ -195,6 +246,7 @@ class LdapManager():
             logger.info("USER: %s", response)
 
     def __del__(self):
+        """Before object destruction, connection to openLDAP server is closed"""
         logger.info('Closing connection')
         self.conn.unbind()
         self.conn = None
