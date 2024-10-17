@@ -146,6 +146,7 @@ def enable_openldap(ip, port, dc, user, password, ldap_auth_path="ldap", descrip
         bind_pass=password,
         user_attr='uid',
         group_attr='cn',
+        username_as_alias=True,
     )
 
 # def enable_userpass():
