@@ -47,11 +47,11 @@ redis:
 ldapsync:
   ip: 10.9.245.5
   source_uri: ldap://141.250.2.135
-  source_basedn: dc=unipg,dc=it
+  source_basedn: ou=People,dc=unipg,dc=it
 
 web:
   ip: 10.9.245.6
-  public_url: https://www.uninuvola.unipg.it
+  public_url: www.uninuvola.unipg.it
   dns_ip: 8.8.8.8
 
 ldapproxy:

@@ -120,6 +120,7 @@ cd $WORKINGDIR/uninuvola
 
 LDAPPROXY_IP=`cat $CONFIGFILE | yq .ldapproxy.ip -r`
 LDAPSYNC_IP=`cat $CONFIGFILE | yq .ldapsync.ip -r`
+LDAPSYNC_PORT=`cat $CONFIGFILE | yq .ldapsync.port`
 LDAP_SOURCE_URI=`cat $CONFIGFILE | yq .ldapsync.source_uri -r`
 LDAP_SOURCE_BASEDN=`cat $CONFIGFILE | yq .ldapsync.source_basedn -r`
 LDAP_SOURCE_BINDDN=`cat $ACTUALDIR/$SECRETFILE | yq .ldapsync.source_binddn -r`
@@ -155,11 +156,13 @@ echo "    uri: \"$LDAP_DESTINATION_URI\"" >> config.yaml
 echo "    basedn: \"$LDAP_DESTINATION_USERS_BASEDN\"" >> config.yaml
 echo "    binddn: \"$LDAP_DESTINATION_BINDDN\"" >> config.yaml
 echo "    password: \"$LDAP_DESTINATION_PASSWORD\"" >> config.yaml
+echo "    override: false" >> config.yaml
 echo "  - name: unipg" >> config.yaml
 echo "    uri: \"$LDAP_SOURCE_URI\"" >> config.yaml
 echo "    basedn: \"$LDAP_SOURCE_BASEDN\"" >> config.yaml
 echo "    binddn: \"$LDAP_SOURCE_BINDDN\"" >> config.yaml
 echo "    password: \"$LDAP_SOURCE_PASSWORD\"" >> config.yaml
+echo "    override: true" >> config.yaml
 
 cp -a .env docker/.env
 cp -a config.yaml docker/config.yaml
@@ -184,6 +187,7 @@ git clone git@github.com:UniNuvola/ldapsyncservice
 cd ldapsyncservice
 
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
+echo "LDAPSYNC_PORT=$LDAPSYNC_PORT" >> .env
 echo "REDIS_URI=\"$REDIS_IP:$REDIS_PORT\"" >> .env
 echo "REDIS_DATABASE=$REDIS_DATABASE" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
@@ -220,6 +224,7 @@ echo "WEB_IP=$WEB_IP" >> .env
 echo "WEB_PUBLIC_URL=$WEB_PUBLIC_URL" >> .env
 echo "DNS_IP=$DNS_IP" >> .env
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" >> .env
+echo "LDAPSYNC_PORT=$LDAPSYNC_PORT" >> .env
 
 cp -a .env docker/.env
 
