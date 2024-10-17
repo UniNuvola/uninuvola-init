@@ -8,4 +8,4 @@ def deploy():
 
     manager = LdapManager()
     manager.add_groups(groups=configs['openldap']['groups'])
-    # manager.add_users()
+    manager.add_users()

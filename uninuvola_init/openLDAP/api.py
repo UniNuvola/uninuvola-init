@@ -27,8 +27,8 @@ class LdapManager():
         self.conn_str = f'cn={configs['openldap']['user']},{self.dc}'
 
         self.USERS = [
-            {'user_id':'nv98001', 'first_name': 'nicolo', 'last_name': 'vescera', 'password': '1234patata', 'ou':self.ou_users, 'uid':1000, 'gid':501},
-            {'user_id':'ff99003', 'first_name': 'fabrizio', 'last_name': 'fagiolo', 'password': '1234patata', 'ou':self.ou_users, 'uid':1001, 'gid':501},
+            # {'user_id':'nv98001', 'first_name': 'nicolo', 'last_name': 'vescera', 'password': '1234patata', 'ou':self.ou_users, 'uid':1000, 'gid':501},
+            # {'user_id':'ff99003', 'first_name': 'fabrizio', 'last_name': 'fagiolo', 'password': '1234patata', 'ou':self.ou_users, 'uid':1001, 'gid':501},
             # {'user_id':'mirko', 'first_name': 'mirko', 'last_name': 'mariotti', 'password': '1234patata', 'ou':self.ou_users, 'uid':1002, 'gid':500},
         ]
 
