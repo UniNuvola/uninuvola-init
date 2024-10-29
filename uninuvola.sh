@@ -187,7 +187,7 @@ git clone git@github.com:UniNuvola/ldapsyncservice
 cd ldapsyncservice
 
 echo "LDAPSYNC_IP=$LDAPSYNC_IP" > .env
-echo "LDAPSYNC_PORT=$LDAPSYNC_PORT" >> .env
+echo "TRIGGER_PORT=$LDAPSYNC_PORT" >> .env
 echo "REDIS_URI=\"$REDIS_IP:$REDIS_PORT\"" >> .env
 echo "REDIS_DATABASE=$REDIS_DATABASE" >> .env
 echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> .env
