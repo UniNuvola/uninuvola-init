@@ -61,3 +61,6 @@ ldapproxy:
 
 influxdb:
   ip: 10.9.245.8
+
+promflux:
+  ip: 10.9.245.9
