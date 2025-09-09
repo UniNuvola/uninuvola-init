@@ -58,3 +58,6 @@ web:
 ldapproxy:
   ip: 10.9.245.7
   port: 389
+
+influxdb:
+  ip: 10.9.245.8
