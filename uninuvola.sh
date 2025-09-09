@@ -182,6 +182,10 @@ cd influx
 echo "INFLUX_IP=$INFLUXDB_IP" > .env
 
 docker compose up -d
+docker compose exec influxdb3-core  influxdb3 create token --admin > secret
+
+# extract token form unformatted influxdb output
+INFLUXDB_TOKEN=`cat secret | grep '^Token:' | awk '{print $2}'`
 
 # --- PROMFLUX
 
