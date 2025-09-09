@@ -170,6 +170,22 @@ cp -a config.yaml docker/config.yaml
 cd docker
 docker compose up -d
 
+# --- INFLUXDB
+
+cd $WORKINGDIR/uninuvola
+
+INFLUXDB_IP=`cat $CONFIGFILE | yq .influxdb.ip -r`
+
+git clone git@github.com:UniNuvola/influx.git
+cd influx
+
+echo "INFLUX_IP=$INFLUXDB_IP" > .env
+
+docker compose up -d
+
+# --- PROMFLUX
+
+
 # --- RUN PYTHON
 
 cd $ACTUALDIR
