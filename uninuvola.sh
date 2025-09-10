@@ -196,8 +196,7 @@ PROMFLUX_IP=`cat $CONFIGFILE | yq .promflux.ip -r`
 git clone git@github.com:UniNuvola/promflux.git
 cd promflux
 
-# TODO: add prometheus_url !!
-echo "PROMETHEUS_URL=" > .env
+echo "PROMETHEUS_URL=http://10.9.10.4:9090/" > .env
 echo "INFLUX_URL=$INFLUXDB_IP:8181" >> .env
 echo "INFLUX_TOKEN=$INFLUXDB_TOKEN" >> .env
 echo "IGNORE_TLS=true" >> .env
