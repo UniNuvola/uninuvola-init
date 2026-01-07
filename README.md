@@ -47,4 +47,10 @@ redis:
 
 ldapsync:
   ip:
+
+influxdb:
+  ip:
+
+promflux:
+  ip:
 ```

@@ -170,6 +170,43 @@ cp -a config.yaml docker/config.yaml
 cd docker
 docker compose up -d
 
+# --- INFLUXDB
+
+cd $WORKINGDIR/uninuvola
+
+INFLUXDB_IP=`cat $CONFIGFILE | yq .influxdb.ip -r`
+
+git clone git@github.com:UniNuvola/influx.git
+cd influx
+
+echo "INFLUX_IP=$INFLUXDB_IP" > .env
+
+docker compose up -d
+docker compose exec influxdb3-core  influxdb3 create token --admin > secret
+
+# extract token form unformatted influxdb output
+INFLUXDB_TOKEN=`cat secret | grep '^Token:' | awk '{print $2}'`
+
+# --- PROMFLUX
+
+cd $WORKINGDIR/uninuvola
+
+PROMFLUX_IP=`cat $CONFIGFILE | yq .promflux.ip -r`
+
+git clone git@github.com:UniNuvola/promflux.git
+cd promflux
+
+echo "PROMETHEUS_URL=http://10.9.10.4:9090/" > .env
+echo "INFLUX_URL=$INFLUXDB_IP:8181" >> .env
+echo "INFLUX_TOKEN=$INFLUXDB_TOKEN" >> .env
+echo "IGNORE_TLS=true" >> .env
+echo "FILE_PATH=rules.yaml" >> .env
+
+echo "PROMFLUX_IP=$PROMFLUX_IP" > docker/.env
+
+cd docker
+docker compose up -d
+
 # --- RUN PYTHON
 
 cd $ACTUALDIR
